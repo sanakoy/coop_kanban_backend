@@ -73,7 +73,7 @@ class TaskService:
 
         return True
 
-    async def get_tasts(self):
+    async def get_tasks(self):
         task_objs = (await self._session.execute(select(Task))).scalars().all()
         return task_objs
 

@@ -15,7 +15,7 @@ def read_root():
     return {"message": "HTTP работает"}
 
 
-app.include_router(task_http.router, prefix="/kanban/api/v1", tags=["task"])
+app.include_router(task_http.router, prefix="/kanban/api/v1/task", tags=["task"])
 
 
 @app.websocket("/ws")

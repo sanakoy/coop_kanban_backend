@@ -8,7 +8,7 @@ from src.services.task_service import TaskService, get_task_service
 router = APIRouter()
 
 
-@router.post("/tasks", response_model=TaskView)
+@router.post("", response_model=TaskView)
 async def create_task(
     task_data: TaskCreate, service: TaskService = Depends(get_task_service)
 ):
@@ -17,7 +17,7 @@ async def create_task(
     return task
 
 
-@router.patch("/tasks/{task_id}", response_model=TaskView)
+@router.patch("/{task_id}", response_model=TaskView)
 async def update_task(
     task_id: UUID,
     task_data: TaskUpdate,
@@ -30,8 +30,14 @@ async def update_task(
     return task
 
 
-@router.delete("/tasks/{task_id}", status_code=204)
+@router.delete("/", status_code=204)
 async def delete_task(task_id: UUID, service: TaskService = Depends(get_task_service)):
     """Удаление задачи"""
     if not await service.delete_task(task_id):
         raise HTTPException(status_code=404, detail="Task not found")
+
+
+@router.get("/", response_model=list[TaskView])
+async def get_all_tasks(service: TaskService = Depends(get_task_service)):
+
+    return await service.get_tasks()
