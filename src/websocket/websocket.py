@@ -1,4 +1,4 @@
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import List
 
 
@@ -21,4 +21,4 @@ class ConnectionManager:
                 self.disconnect(connection)
 
 
-manager = ConnectionManager()
+ws_manager = ConnectionManager()

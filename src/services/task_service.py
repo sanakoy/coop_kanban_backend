@@ -1,34 +1,22 @@
 from functools import lru_cache
 from uuid import UUID
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy import select
+from src.websocket.websocket import ws_manager
 from src.db.postgres import get_session
 from src.models.task import Task
 from src.schemas.task_schemas import TaskCreate, TaskUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import WebSocket
-import json
 
 
 class TaskService:
     _session: AsyncSession
 
-    def __init__(self, session: AsyncSession, ws_manager: WebSocket = None):
+    def __init__(self, session: AsyncSession):
         self._session = session
-        self.ws_manager = ws_manager
 
     async def _broadcast_tasks(self):
-        """Отправляет актуальный список задач всем клиентам"""
-        tasks = await self.get_tasks()
-        if self.ws_manager:
-            await self.ws_manager.broadcast(
-                json.dumps(
-                    {
-                        "action": "tasks_updated",
-                        "data": [task.to_dict() for task in tasks],
-                    }
-                )
-            )
+        await ws_manager.broadcast("tasks_updated")
 
     async def create_task(self, validated_data: TaskCreate):
         create_task_data = validated_data.model_dump(exclude_unset=True)
@@ -37,6 +25,7 @@ class TaskService:
         self._session.add(new_task_obj)
         await self._session.commit()
         await self._session.refresh(new_task_obj)
+        await self._broadcast_tasks()
         return new_task_obj
 
     async def update_task(
@@ -50,11 +39,24 @@ class TaskService:
             .one_or_none()
         )
 
+        if task_obj is None:
+            raise HTTPException(
+                status_code=404, detail="Задача с id {} не найдена.".format(task_id)
+            )
+
         update_task_data = validated_data.model_dump(exclude_unset=True)
 
-        for key, value in update_task_data.items():
-            setattr(task_obj, key, value)
-        await self._session.commit()
+        try:
+            for key, value in update_task_data.items():
+                setattr(task_obj, key, value)
+            await self._session.commit()
+        except:
+            raise HTTPException(
+                status_code=500,
+                detail="Возникла ошибка при обновлении задачи с id {}.".format(task_id),
+            )
+
+        await self._broadcast_tasks()
 
         return task_obj
 
@@ -65,12 +67,21 @@ class TaskService:
             .one_or_none()
         )
 
-        if not task_obj:
-            return False
+        if task_obj is None:
+            raise HTTPException(
+                status_code=404, detail="Задача с id {} не найдена.".format(task_id)
+            )
 
-        await self._session.delete(task_obj)
-        await self._session.commit()
+        try:
+            await self._session.delete(task_obj)
+            await self._session.commit()
+        except:
+            raise HTTPException(
+                status_code=500,
+                detail="Возникла ошибка при удалении задачи с id {}.".format(task_id),
+            )
 
+        await self._broadcast_tasks()
         return True
 
     async def get_tasks(self):
