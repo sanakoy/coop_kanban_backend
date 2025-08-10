@@ -1,22 +1,29 @@
 # Тестовое задание для компании Coop
+
+## **Применяемые технологии**
+
+- Python 3.11
+- FastAPI
+- Websockets
+- PostgreSQL
+- SQLAlchemy
+- Pydantic
+- Uvicorn
+
 ## **Подготовка к настройке**
+
 Перед дальнейшими действиями необходимо создать базу данных postgresql и вписать ее данные (хост, порт, пароль и т.д.) в .env файл, который необходимо создать. Вносить данные в .env файл нужно по примеру файла .env.template, который лежит в директории проекта.
+
 ## **Инструкция по запуску**
+
 - После того, как проект (ветка master) оказался на локальном компьютере необходимо перейти в директорию с проектом, после чего создать и активировать виртуальное окружение
-  <br>
-  cd 
-  <br>
-  python -m venv venv
-  <br
-  venv/Scripts/activate
+  `cd coop_kanban_backend`
+  `python -m venv venv`
+  `venv/Scripts/activate`
 - Необходимо установить все зависимости из requirements.txt (Python 3.11)
-  <br>
-  pip install -r requirements.txt
+  `pip install -r requirements.txt`
 - Дальше следует выполнить миграции:
-  <br>
-  alembic upgrade head
+  `alembic upgrade head`
 - Запуск локального сервера
-  <br>
-  uvicorn main:app --reload 
-  <br>
-Сервер запущен! Теперь можно подключить фронт
+  `uvicorn main:app --reload`
+  Сервер запущен! Теперь можно подключить фронт
